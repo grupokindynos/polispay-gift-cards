@@ -11,36 +11,36 @@ const countries = [
     name: "Germany"
   },
   {
-    id: 0,
+    id: 1,
     name: "Mexico"
   },
   {
-    id: 0,
+    id: 2,
     name: "United States"
   },
 ];
 
 const categories = [
   {
-    id: 0,
+    id: 1,
     src: "",
     icon: "cash-register",
     name: "Ecomerce"
   },
   {
-    id: 0,
+    id: 2,
     src: "",
     icon: "utensils",
     name: "Food"
   },
   {
-    id: 0,
+    id: 3,
     src: "",
     icon: "mobile-alt",
     name: "Mobile"
   },
   {
-    id: 0,
+    id: 4,
     src: "",
     icon: "gamepad",
     name: "Game"
@@ -49,27 +49,27 @@ const categories = [
 
 const giftCards = [
   {
-    id: 0,
+    id: 1,
     src: require("./assets/img/gift-card.png"),
     title: "Amazon"
   },
   {
-    id: 0,
+    id: 2,
     src: require("./assets/img/gift-card.png"),
     title: "Amazon"
   },
   {
-    id: 0,
+    id: 3,
     src: require("./assets/img/gift-card.png"),
     title: "Amazon"
   },
   {
-    id: 0,
+    id: 4,
     src: require("./assets/img/gift-card.png"),
     title: "Amazon"
   },
   {
-    id: 0,
+    id: 5,
     src: require("./assets/img/gift-card.png"),
     title: "Amazon"
   },
@@ -107,7 +107,7 @@ function App() {
                     {
                       countries.map((country) => {
                         return(
-                        <option>{country.name}</option>
+                        <option key={country.id}>{country.name}</option>
                         );
                       })
                     }
@@ -120,7 +120,7 @@ function App() {
             {
               categories.map((category) => {
                 return (
-                  <li>
+                  <li key={category.id}>
                     <span className="fas-icon">{category.icon}</span>
                     <span>{category.name}</span>
                   </li>
