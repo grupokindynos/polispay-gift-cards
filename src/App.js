@@ -1,165 +1,188 @@
-import React from 'react';
+import React, { Component } from 'react';
 import './App.css';
-import { Navbar, Nav, NavDropdown, Form } from 'react-bootstrap';
+import { Navbar, Nav, NavDropdown } from 'react-bootstrap';
 import Breadcrumb from 'react-bootstrap/Breadcrumb'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import logo from './assets/img/logo.png';
+import axios from 'axios';
 
-const countries = [
+const benefits = [
   {
     id: 0,
-    name: "Germany"
-  },
-  {
+    name: "All gift cards",
+    icon: ""
+  }, {
     id: 1,
-    name: "Mexico"
+    name: "Data",
+    icon: "globe"
   },
   {
     id: 2,
-    name: "United States"
-  },
-];
-
-const categories = [
-  {
-    id: 1,
-    src: "",
-    icon: "cash-register",
-    name: "Ecomerce"
-  },
-  {
-    id: 2,
-    src: "",
-    icon: "utensils",
-    name: "Food"
+    name: "Digital Product",
+    icon: "mobile-alt"
   },
   {
     id: 3,
-    src: "",
-    icon: "mobile-alt",
-    name: "Mobile"
+    name: "Gaming",
+    icon: "gamepad"
   },
   {
     id: 4,
-    src: "",
-    icon: "gamepad",
-    name: "Game"
-  },
-];
-
-const giftCards = [
-  {
-    id: 1,
-    src: require("./assets/img/gift-card.png"),
-    title: "Amazon"
-  },
-  {
-    id: 2,
-    src: require("./assets/img/gift-card.png"),
-    title: "Amazon"
-  },
-  {
-    id: 3,
-    src: require("./assets/img/gift-card.png"),
-    title: "Amazon"
-  },
-  {
-    id: 4,
-    src: require("./assets/img/gift-card.png"),
-    title: "Amazon"
+    name: "Long Distance",
+    icon: "globe-americas"
   },
   {
     id: 5,
-    src: require("./assets/img/gift-card.png"),
-    title: "Amazon"
+    name: "Minutes",
+    icon: "phone-volume"
   },
-]
-function App() {
-  return (
-    <div className="App">
-      <Navbar className="nav" expand="lg">
-        <Navbar.Brand href="#home">
-          <img className="nav__brand" src={logo} alt="" />
-        </Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="mr-auto">
-            <Nav.Link href="#home">Home</Nav.Link>
-            <Nav.Link href="#link">Link</Nav.Link>
-            <NavDropdown title="Dropdown" id="basic-nav-dropdown">
-              <NavDropdown.Item href="#action/3.1">Action</NavDropdown.Item>
-              <NavDropdown.Item href="#action/3.2">Another action</NavDropdown.Item>
-              <NavDropdown.Item href="#action/3.3">Something</NavDropdown.Item>
-              <NavDropdown.Divider />
-              <NavDropdown.Item href="#action/3.4">Separated link</NavDropdown.Item>
-            </NavDropdown>
-          </Nav>
-        </Navbar.Collapse>
-      </Navbar>
-      <section className="container main">
-        <div className="row">
-          <ul className="col-lg-4 main__sidebar">
-            <li>
-              <Form>
-                <Form.Group controlId="exampleForm.ControlSelect1">
-                  <Form.Label>Country</Form.Label>
-                  <Form.Control as="select">
-                    {
-                      countries.map((country) => {
-                        return(
-                        <option key={country.id}>{country.name}</option>
-                        );
-                      })
-                    }
-                  </Form.Control>
-                </Form.Group>
-              </Form>
-            </li>
-            <div className="divider"></div>
-            <h3>Gift Cards</h3>
-            {
-              categories.map((category) => {
-                return (
-                  <li key={category.id}>
-                    <span className="fas-icon">{category.icon}</span>
-                    <span>{category.name}</span>
-                  </li>
-                );
-              })
-            }
-          </ul>
-          <div className="col-lg-8">
-            <div className="row">
-              <Breadcrumb>
-                <Breadcrumb.Item href="#">Gift Cards</Breadcrumb.Item>
-                <Breadcrumb.Item href="https://getbootstrap.com/docs/4.0/components/breadcrumb/">
-                  Mexico
-                </Breadcrumb.Item>
-                <Breadcrumb.Item active>Ecomerce</Breadcrumb.Item>
-              </Breadcrumb>
-            </div>
-            <div className="row">
+  {
+    id: 6,
+    name: "Mobile",
+    icon: "mobile"
+  },
+  {
+    id: 7,
+    name: "TV",
+    icon: "tv"
+  },
+  {
+    id: 8,
+    name: "Utility",
+    icon: "file-invoice"
+  },
+
+];
+class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      countries: [],
+      selectedCountry: "MX",
+      vouchersFromCountry: []
+    };
+  }
+
+  componentDidMount() {
+    this.getCountries();
+    this.getVouchersFromCountry(this.state.selectedCountry);
+  }
+
+  async getCountries() {
+    const response =
+      await axios.get("https://hestia.polispay.com/open/voucher/list/countries");
+/*       let countryCodes = response.data;
+      for(let countryCode of countryCodes){
+
+      } */
+    this.setState({
+      countries: response.data
+    });
+  }
+
+  async getVouchersFromCountry(countryCode) {
+    const response =
+      await axios.get("https://hestia.polispay.com/open/voucher/list/products/" + countryCode);
+    this.setState({
+      vouchersFromCountry: response.data
+    });
+  }
+
+  handleCountrySelect = (event) => {
+    this.setState({
+      selectedCountry: event.target.value
+    });
+    this.getVouchersFromCountry(event.target.value);
+  }
+
+  render() {
+    return (
+      <div className="App">
+        <Navbar className="nav" expand="lg">
+          <Navbar.Brand href="#home">
+            <img className="nav__brand" src={logo} alt="" />
+          </Navbar.Brand>
+          <Navbar.Toggle aria-controls="basic-navbar-nav" />
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="mr-auto">
+              <Nav.Link href="#home">Home</Nav.Link>
+              <Nav.Link href="#link">Link</Nav.Link>
+              <NavDropdown title="Dropdown" id="basic-nav-dropdown">
+                <NavDropdown.Item href="#action/3.1">Action</NavDropdown.Item>
+                <NavDropdown.Item href="#action/3.2">Another action</NavDropdown.Item>
+                <NavDropdown.Item href="#action/3.3">Something</NavDropdown.Item>
+                <NavDropdown.Divider />
+                <NavDropdown.Item href="#action/3.4">Separated link</NavDropdown.Item>
+              </NavDropdown>
+            </Nav>
+          </Navbar.Collapse>
+        </Navbar>
+        <section className="container main">
+          <div className="row">
+            <ul className="col-lg-4 main__sidebar">
+              <li>
+                <form>
+                  <div className="form-group">
+                    <label>Countries</label>
+                    <select className="form-control" onChange={this.handleCountrySelect}>
+                      {
+                        this.state.countries.map((country) => {
+                          return (
+                            <option key={country} value={country}>{country}</option>
+                          );
+                        })
+                      }
+                    </select>
+                  </div>
+                </form>
+              </li>
+              <div className="divider" />
+              <h3>Gift Cards</h3>
               {
-                giftCards.map((giftCard) => {
+                benefits.map((benefit) => {
                   return (
-                    <div className="col-md-4 abs-center" key={giftCard.id}>
-                      <div className="main__card">
-                        <img src={giftCard.src} alt="" />
-                        <p>{giftCard.title}</p>
-                      </div>
-                    </div>
+                    <li key={benefit.id}>
+                      <span className="fas-icon">{benefit.icon}</span>
+                      <span>{benefit.name}</span>
+                    </li>
                   );
                 })
               }
+            </ul>
+            <div className="col-lg-8">
+              <div className="row">
+                <Breadcrumb>
+                  <Breadcrumb.Item href="#">Gift Cards</Breadcrumb.Item>
+                  <Breadcrumb.Item active href="#">
+                    {this.state.selectedCountry}
+                  </Breadcrumb.Item>
+                </Breadcrumb>
+              </div>
+              <div className="row">
+                {
+                  this.state.vouchersFromCountry.map((voucher) => {
+                    return (
+                      <div className="col-md-4 abs-center" key={voucher.product_id}>
+                        <div className="main__card">
+                          <div className="main__card__img">
+                            <img src={voucher.image} alt={voucher.name} />
+                          </div>
+                          <p>{voucher.provider_name}</p>
+                        </div>
+                      </div>
+                    );
+                  })
+                }
+              </div>
             </div>
           </div>
-        </div>
-      </section>
-      <section className="footer">
-        <div className="container"></div>
-      </section>
-    </div>
-  );
+        </section>
+        <section className="footer">
+
+        </section>
+      </div>
+    );
+  }
 }
 
 export default App;
