@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
 import './App.css';
-import { Navbar, Nav, NavDropdown } from 'react-bootstrap';
+import { Navbar, Nav, NavDropdown, Accordion, Button } from 'react-bootstrap';
 import Breadcrumb from 'react-bootstrap/Breadcrumb'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import logo from './assets/img/logo.png';
 import axios from 'axios';
+import ISOCountries from 'i18n-iso-countries';
 
 const benefits = [
   {
@@ -53,6 +54,8 @@ const benefits = [
   },
 
 ];
+
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -71,20 +74,39 @@ class App extends Component {
   async getCountries() {
     const response =
       await axios.get("https://hestia.polispay.com/open/voucher/list/countries");
-/*       let countryCodes = response.data;
-      for(let countryCode of countryCodes){
-
-      } */
+    /*  console.log("US (Alpha-2) => " + ISOCountries.getName("US", "en"));
+    let countryCodes = response.data;
+    for (let countryCode of countryCodes) {
+      console.log("US (Alpha-2) => " + ISOCountries.getName(countryCode, "en"));
+    } */
     this.setState({
       countries: response.data
     });
   }
 
+  groupBy(objectArray, property) {
+    return objectArray.reduce((acc, obj) => {
+      let key = obj[property]
+      if (!acc[key]) {
+        acc[key] = []
+      }
+      acc[key].push(obj)
+      return acc
+    }, [])
+  }
+
   async getVouchersFromCountry(countryCode) {
     const response =
       await axios.get("https://hestia.polispay.com/open/voucher/list/products/" + countryCode);
+    let vouchers = response.data;
+    let vouchersAux = Object.values(this.groupBy(vouchers, 'provider_id'));
+    let voucherList = [];
+    vouchersAux.map((voucher) => {
+      voucherList.push(voucher[0])
+    })
+    console.log(voucherList)
     this.setState({
-      vouchersFromCountry: response.data
+      vouchersFromCountry: voucherList
     });
   }
 
@@ -138,16 +160,27 @@ class App extends Component {
               </li>
               <div className="divider" />
               <h3>Gift Cards</h3>
-              {
-                benefits.map((benefit) => {
-                  return (
-                    <li key={benefit.id}>
-                      <span className="fas-icon">{benefit.icon}</span>
-                      <span>{benefit.name}</span>
-                    </li>
-                  );
-                })
-              }
+              <Accordion defaultActiveKey="0">
+                <Accordion.Toggle as={Button} variant="link" eventKey="0">
+                  <div className="form__accordion">
+                    <div>Benefits</div> <div className="fas-icon">chevron-down</div>
+                  </div>
+                </Accordion.Toggle>
+                <Accordion.Collapse eventKey="0">
+                  <div>
+                    {
+                      benefits.map((benefit) => {
+                        return (
+                          <li key={benefit.id}>
+                            <span className="fas-icon">{benefit.icon}</span>
+                            <span>{benefit.name}</span>
+                          </li>
+                        );
+                      })
+                    }
+                  </div>
+                </Accordion.Collapse>
+              </Accordion>
             </ul>
             <div className="col-lg-8">
               <div className="row">
@@ -167,7 +200,7 @@ class App extends Component {
                           <div className="main__card__img">
                             <img src={voucher.image} alt={voucher.name} />
                           </div>
-                          <p>{voucher.provider_name}</p>
+                          <p>{voucher.provider_name}, {voucher.provider_id}</p>
                         </div>
                       </div>
                     );
