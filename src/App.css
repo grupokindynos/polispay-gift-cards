@@ -56,7 +56,6 @@
 
 .fas-icon {
   font-family: 'Font Awesome Solid';
-  font-size: 1.5rem;
   margin-right: 1rem;
 }
 
@@ -106,9 +105,12 @@ ul {
 }
 
 .form__accordion {
+  display: flex !important;
+  background-color: #f5f5f5 !important;
   width: 100%;
-  display: flex;
-  justify-content: space-between;
+  color: black !important;
+  text-decoration: none !important;
+  justify-content: space-around;
 }
 
 .divider {
