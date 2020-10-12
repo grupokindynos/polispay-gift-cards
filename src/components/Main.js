@@ -3,6 +3,7 @@ import { Accordion, Button } from 'react-bootstrap';
 import Breadcrumb from 'react-bootstrap/Breadcrumb'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios';
+import countries from 'i18n-iso-countries'
 import Header from './Header';
 
 const benefits = [
@@ -71,11 +72,7 @@ class Main extends Component {
     async getCountries() {
         const response =
             await axios.get("https://hestia.polispay.com/open/voucher/list/countries");
-        /*  console.log("US (Alpha-2) => " + ISOCountries.getName("US", "en"));
-        let countryCodes = response.data;
-        for (let countryCode of countryCodes) {
-          console.log("US (Alpha-2) => " + ISOCountries.getName(countryCode, "en"));
-        } */
+            countries.registerLocale(require("i18n-iso-countries/langs/en.json"));
         this.setState({
             countries: response.data
         });
@@ -129,7 +126,7 @@ class Main extends Component {
                                             {
                                                 this.state.countries.map((country) => {
                                                     return (
-                                                        <option key={country} value={country}>{country}</option>
+                                                        <option key={country} value={country}>{countries.getName(country,"en")}</option>
                                                     );
                                                 })
                                             }
