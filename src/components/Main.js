@@ -60,7 +60,10 @@ class Main extends Component {
         this.state = {
             countries: [],
             selectedCountry: "MX",
-            vouchersFromCountry: []
+            vouchersFromCountry: [],
+            ProductsFromVoucher: [],
+            showProductsFromCountry: true,
+            selectedVoucher: {}
         };
     }
 
@@ -72,7 +75,7 @@ class Main extends Component {
     async getCountries() {
         const response =
             await axios.get("https://hestia.polispay.com/open/voucher/list/countries");
-            countries.registerLocale(require("i18n-iso-countries/langs/en.json"));
+        countries.registerLocale(require("i18n-iso-countries/langs/en.json"));
         this.setState({
             countries: response.data
         });
@@ -104,11 +107,31 @@ class Main extends Component {
         });
     }
 
+    async getProductsFromVoucher(voucher) {
+        let products = voucher.variants;
+        let productList = [];
+        products.map((product) => (
+            productList.push(product)
+        ))
+        console.log("res",productList);
+        this.setState({
+            productsFromVoucher: products
+        });
+    }
+
     handleCountrySelect = (event) => {
         this.setState({
-            selectedCountry: event.target.value
+            selectedCountry: event.target.value,
+            selectedProduct: ""
         });
         this.getVouchersFromCountry(event.target.value);
+    }
+
+    handleProductSelect = (voucher) => {
+        this.setState({
+            selectedProduct: voucher
+        });
+        this.getProductsFromVoucher(voucher);
     }
 
     render() {
@@ -122,11 +145,13 @@ class Main extends Component {
                                 <form>
                                     <div className="form-group">
                                         <label>Countries</label>
-                                        <select className="form-control" onChange={this.handleCountrySelect}>
+                                        <select className="form-control" onChange={this.handleCountrySelect} value={this.state.selectedCountry}>
                                             {
-                                                this.state.countries.map((country) => {
+                                                this.state.countries
+                                                    .sort((a, b) => countries.getName(a, "en") < countries.getName(b, "en") ? -1 : 1)
+                                                    .map((country) => {
                                                     return (
-                                                        <option key={country} value={country}>{countries.getName(country,"en")}</option>
+                                                        <option key={country} value={country}>{countries.getName(country, "en")}</option>
                                                     );
                                                 })
                                             }
@@ -168,23 +193,55 @@ class Main extends Component {
                                     <Breadcrumb.Item active href="#">
                                         {this.state.selectedCountry}
                                     </Breadcrumb.Item>
+                                    { this.state.selectedProduct &&
+                                        <Breadcrumb.Item active href="#">
+                                            {this.state.selectedProduct.provider_name}
+                                        </Breadcrumb.Item>
+                                    }
                                 </Breadcrumb>
+                                <div className="button__back">
+                                    { this.state.selectedProduct &&
+                                        <Button>
+                                            Go back
+                                        </Button>
+                                    }
+                                </div>
                             </div>
+
                             <div className="row">
-                                {
+                                {              
                                     this.state.vouchersFromCountry.map((voucher) => {
                                         return (
                                             <div className="col-md-4 abs-center" key={voucher.product_id}>
-                                                <div className="main__card">
+                                                <div className="main__card" onClick={e => this.handleProductSelect(voucher)}>
                                                     <div className="main__card__img">
                                                         <img src={voucher.image} alt={voucher.name} />
                                                     </div>
                                                     <p>{voucher.provider_name}</p>
+                                                    {/* <p>{voucher.variants.variant_id}</p> */}
                                                 </div>
                                             </div>
                                         );
                                     })
                                 }
+                                
+                                    { this.state.showProductsFromCountry &&
+                                         this.state.productsFromVoucher.map((voucher) => {
+                                                return (
+                                                    <div className="col-md-4 abs-center" key={voucher.product_id}>
+                                                        <div className="main__card" onClick={e => this.handleProductSelect(voucher)}>
+                                                            <div className="main__card__img">
+                                                                <img src={voucher.image} alt={voucher.name} />
+                                                            </div>
+                                                            <p className="abs-right">{voucher.product_id}</p>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
+                                        
+                                    }
+                                                              
+
                             </div>
                         </div>
                     </div>
