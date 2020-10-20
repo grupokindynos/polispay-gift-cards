@@ -61,7 +61,7 @@ class Main extends Component {
             countries: [],
             selectedCountry: "MX",
             vouchersFromCountry: [],
-            ProductsFromVoucher: [],
+            productsFromVoucher: [],
             showProductsFromCountry: true,
             selectedVoucher: {}
         };
@@ -113,18 +113,29 @@ class Main extends Component {
         products.map((product) => (
             productList.push(product)
         ))
-        console.log("res",productList);
         this.setState({
-            productsFromVoucher: products
+            productsFromVoucher: productList,
+            showProductsFromCountry: false,
+            selectedVoucher: voucher,
         });
     }
 
     handleCountrySelect = (event) => {
         this.setState({
             selectedCountry: event.target.value,
-            selectedProduct: ""
+            selectedProduct: "",
+            showProductsFromCountry: true
         });
         this.getVouchersFromCountry(event.target.value);
+    }
+
+    handleBreadcrumbItemSelect = (country) => {
+        this.setState({
+            selectedCountry: country,
+            selectedProduct: "",
+            showProductsFromCountry: true
+        });
+        this.getVouchersFromCountry(country);
     }
 
     handleProductSelect = (voucher) => {
@@ -190,58 +201,58 @@ class Main extends Component {
                             <div className="row">
                                 <Breadcrumb>
                                     <Breadcrumb.Item href="#">Gift Cards</Breadcrumb.Item>
-                                    <Breadcrumb.Item active href="#">
+                                    <Breadcrumb.Item href="#" onClick={e => this.handleBreadcrumbItemSelect(this.state.selectedCountry)}>
                                         {this.state.selectedCountry}
                                     </Breadcrumb.Item>
                                     { this.state.selectedProduct &&
-                                        <Breadcrumb.Item active href="#">
-                                            {this.state.selectedProduct.provider_name}
-                                        </Breadcrumb.Item>
+                                        !this.state.showProductsFromCountry && 
+                                            <Breadcrumb.Item active href="#">
+                                                {this.state.selectedProduct.provider_name}
+                                            </Breadcrumb.Item>
                                     }
                                 </Breadcrumb>
-                                <div className="button__back">
-                                    { this.state.selectedProduct &&
-                                        <Button>
-                                            Go back
-                                        </Button>
-                                    }
-                                </div>
                             </div>
 
                             <div className="row">
-                                {              
-                                    this.state.vouchersFromCountry.map((voucher) => {
-                                        return (
-                                            <div className="col-md-4 abs-center" key={voucher.product_id}>
-                                                <div className="main__card" onClick={e => this.handleProductSelect(voucher)}>
-                                                    <div className="main__card__img">
-                                                        <img src={voucher.image} alt={voucher.name} />
+                                {         
+                                    this.state.showProductsFromCountry &&     
+                                        this.state.vouchersFromCountry.map((voucher) => {
+                                            return (
+                                                <div className="col-md-4 abs-center" key={voucher.product_id}>
+                                                    <div className="main__card" onClick={e => this.handleProductSelect(voucher)}>
+                                                        <div className="main__card__img">
+                                                            <img src={voucher.image} alt={voucher.name} />
+                                                        </div>
+                                                        <p>{voucher.provider_name}</p>
                                                     </div>
-                                                    <p>{voucher.provider_name}</p>
-                                                    {/* <p>{voucher.variants.variant_id}</p> */}
                                                 </div>
-                                            </div>
-                                        );
-                                    })
+                                            );
+                                        })
                                 }
                                 
-                                    { this.state.showProductsFromCountry &&
-                                         this.state.productsFromVoucher.map((voucher) => {
-                                                return (
-                                                    <div className="col-md-4 abs-center" key={voucher.product_id}>
-                                                        <div className="main__card" onClick={e => this.handleProductSelect(voucher)}>
-                                                            <div className="main__card__img">
-                                                                <img src={voucher.image} alt={voucher.name} />
-                                                            </div>
-                                                            <p className="abs-right">{voucher.product_id}</p>
-                                                        </div>
-                                                    </div>
-                                                );
+                                { 
+                                    !this.state.showProductsFromCountry &&
+                                        this.state.productsFromVoucher.map((product) => {
+                                            let currencyValue = product.currency==="" ? 'EUR' : product.currency;
+                                            const formatter = new Intl.NumberFormat('en-US', {
+                                                style: 'currency',
+                                                currency: currencyValue,
+                                                minimumFractionDigits: 2
                                             })
-                                        
-                                    }
-                                                              
-
+                                            return (
+                                                <div className="col-md-4 abs-center" key={this.state.selectedVoucher.product_id}>
+                                                    <div className="main__card">
+                                                        <div className="main__card__img">
+                                                            <img src={this.state.selectedVoucher.image} alt={this.state.selectedVoucher.name} />
+                                                        </div>
+                                                        <p className="abs-center">{this.state.selectedVoucher.provider_name}</p>
+                                                        <p className="abs-center">{product.currency}</p>
+                                                        <p className="abs-center">{formatter.format(product.value/100)}</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                }
                             </div>
                         </div>
                     </div>
