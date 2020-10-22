@@ -101,7 +101,6 @@ class Main extends Component {
         vouchersAux.map((voucher) => (
             voucherList.push(voucher[0])
         ))
-        console.log(voucherList)
         this.setState({
             vouchersFromCountry: voucherList
         });
@@ -229,7 +228,6 @@ class Main extends Component {
                                             );
                                         })
                                 }
-                                
                                 { 
                                     !this.state.showProductsFromCountry &&
                                         this.state.productsFromVoucher.map((product) => {
@@ -240,7 +238,7 @@ class Main extends Component {
                                                 minimumFractionDigits: 2
                                             })
                                             return (
-                                                <div className="col-md-4 abs-center" key={this.state.selectedVoucher.product_id}>
+                                                <div className="col-md-4 abs-center" key={product.variant_id}>
                                                     <div className="main__card">
                                                         <div className="main__card__img">
                                                             <img src={this.state.selectedVoucher.image} alt={this.state.selectedVoucher.name} />
