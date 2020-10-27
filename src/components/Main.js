@@ -5,7 +5,10 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios';
 import countries from 'i18n-iso-countries'
 import Header from './Header';
+import { css } from "@emotion/core";
+import PulseLoader from "react-spinners/PulseLoader";
 
+const override = css`display: block;margin: 0 auto;border-color: green;`;
 const benefits = [
     {
         id: 0,
@@ -51,9 +54,7 @@ const benefits = [
         name: "Utility",
         icon: "file-invoice"
     },
-
 ];
-
 class Main extends Component {
     constructor(props) {
         super(props);
@@ -62,16 +63,19 @@ class Main extends Component {
             selectedCountry: "MX",
             vouchersFromCountry: [],
             productsFromVoucher: [],
+            vouchersFromBenefit: [],
             showProductsFromCountry: true,
-            selectedVoucher: {}
+            selectedVoucher: {},
+            showBenefits: false,
+            selectedBenefit: "",
+            showLoadingCircle: false,
+            showEmptyMessage: false,
         };
     }
-
     componentDidMount() {
         this.getCountries();
         this.getVouchersFromCountry(this.state.selectedCountry);
     }
-
     async getCountries() {
         const response =
             await axios.get("https://hestia.polispay.com/open/voucher/list/countries");
@@ -80,7 +84,6 @@ class Main extends Component {
             countries: response.data
         });
     }
-
     groupBy(objectArray, property) {
         return objectArray.reduce((acc, obj) => {
             let key = obj[property]
@@ -91,8 +94,12 @@ class Main extends Component {
             return acc
         }, [])
     }
-
     async getVouchersFromCountry(countryCode) {
+        this.setState({
+            showLoadingCircle: true,
+            vouchersFromCountry: [],
+            showEmptyMessage: false,
+        })
         const response =
             await axios.get("https://hestia.polispay.com/open/voucher/list/products/" + countryCode);
         let vouchers = response.data;
@@ -101,12 +108,45 @@ class Main extends Component {
         vouchersAux.map((voucher) => (
             voucherList.push(voucher[0])
         ))
+        voucherList.sort((a, b) => a.provider_name.toLowerCase() < b.provider_name.toLowerCase() ? -1 : 1)
         this.setState({
-            vouchersFromCountry: voucherList
+            vouchersFromCountry: voucherList,
+            showLoadingCircle: false,
+            selectedProduct: "",
+            selectedCountry: countryCode,
+            showBenefits: false,
+            selectedBenefit: "",
         });
     }
-
+    async getVouchersFromBenefit(benefit) {
+        this.setState({
+            showLoadingCircle: true,
+            showEmptyMessage: false,
+            vouchersFromCountry: [],
+        })
+        const response =
+            await axios.get("https://hestia.polispay.com/open/voucher/list/products/" + this.state.selectedCountry);
+        let vouchers = response.data;
+        let benefitList = [];
+        benefitList = Object.values(vouchers).filter((voucher) => voucher.benefits[benefit] === true);
+        if (benefitList.length === 0) {
+            this.setState({
+                showEmptyMessage: true,
+            })
+        }
+        benefitList.sort((a, b) => a.provider_name.toLowerCase() < b.provider_name.toLowerCase() ? -1 : 1)
+        this.setState({
+            vouchersFromCountry: benefitList,
+            showLoadingCircle: false,
+            showBenefits: true,
+            selectedBenefit: benefit,
+        });
+    }
     async getProductsFromVoucher(voucher) {
+        this.setState({
+            showLoadingCircle: true,
+            productsFromVoucher: [],
+        })
         let products = voucher.variants;
         let productList = [];
         products.map((product) => (
@@ -114,36 +154,50 @@ class Main extends Component {
         ))
         this.setState({
             productsFromVoucher: productList,
+            showLoadingCircle: false,
             showProductsFromCountry: false,
             selectedVoucher: voucher,
+            showBenefits: true,
         });
     }
-
     handleCountrySelect = (event) => {
         this.setState({
             selectedCountry: event.target.value,
             selectedProduct: "",
-            showProductsFromCountry: true
+            showProductsFromCountry: true,
+            showBenefits: false,
         });
         this.getVouchersFromCountry(event.target.value);
     }
-
-    handleBreadcrumbItemSelect = (country) => {
+    handleBreadcrumbCountrySelect = (country) => {
         this.setState({
             selectedCountry: country,
             selectedProduct: "",
-            showProductsFromCountry: true
+            showProductsFromCountry: true,
+            showBenefits: false,
         });
         this.getVouchersFromCountry(country);
     }
-
     handleProductSelect = (voucher) => {
         this.setState({
-            selectedProduct: voucher
+            selectedProduct: voucher,
+            showBenefits: false,
         });
         this.getProductsFromVoucher(voucher);
     }
-
+    handleBenefitSelected = (benefit) => {
+        this.setState({
+            selectedBenefit: "",
+            selectedProduct: "",
+            showBenefits: true,
+            showProductsFromCountry: true
+        })
+        if (benefit === "Allgiftcards") {
+            this.getVouchersFromCountry(this.state.selectedCountry);
+        } else {
+            this.getVouchersFromBenefit(benefit);
+        }
+    }
     render() {
         return (
             <div className="App">
@@ -158,7 +212,7 @@ class Main extends Component {
                                         <select className="form-control" onChange={this.handleCountrySelect} value={this.state.selectedCountry}>
                                             {
                                                 this.state.countries
-                                                    .sort((a, b) => countries.getName(a, "en") < countries.getName(b, "en") ? -1 : 1)
+                                                    .sort( (a, b)  => countries.getName(a, "en") < countries.getName(b, "en") ? -1 : 1)
                                                     .map((country) => {
                                                     return (
                                                         <option key={country} value={country}>{countries.getName(country, "en")}</option>
@@ -185,7 +239,7 @@ class Main extends Component {
                                         {
                                             benefits.map((benefit) => {
                                                 return (
-                                                    <li key={benefit.id}>
+                                                    <li key={benefit.id} onClick={e => this.handleBenefitSelected(benefit.name.replaceAll(" ",""))}>
                                                         <span className="fas-icon">{benefit.icon}</span>
                                                         <span>{benefit.name}</span>
                                                     </li>
@@ -200,33 +254,54 @@ class Main extends Component {
                             <div className="row">
                                 <Breadcrumb>
                                     <Breadcrumb.Item href="#">Gift Cards</Breadcrumb.Item>
-                                    <Breadcrumb.Item href="#" onClick={e => this.handleBreadcrumbItemSelect(this.state.selectedCountry)}>
+                                    <Breadcrumb.Item href="#" onClick={e => this.handleBreadcrumbCountrySelect(this.state.selectedCountry)}>
                                         {this.state.selectedCountry}
                                     </Breadcrumb.Item>
-                                    { this.state.selectedProduct &&
-                                        !this.state.showProductsFromCountry && 
-                                            <Breadcrumb.Item active href="#">
-                                                {this.state.selectedProduct.provider_name}
-                                            </Breadcrumb.Item>
+                                    { 
+                                        this.state.selectedProduct &&
+                                            !this.state.showProductsFromCountry && 
+                                                <Breadcrumb.Item active href="#">
+                                                    {this.state.selectedProduct.provider_name}
+                                                </Breadcrumb.Item>
+                                    }
+                                    { 
+                                        this.state.showBenefits &&
+                                            this.state.showProductsFromCountry && 
+                                                <Breadcrumb.Item href="#" onClick={e => this.handleBenefitSelected(this.state.selectedBenefit)}>
+                                                    {this.state.selectedBenefit}
+                                                </Breadcrumb.Item>
                                     }
                                 </Breadcrumb>
                             </div>
-
                             <div className="row">
+                                <PulseLoader
+                                    css={override}
+                                    size={15}
+                                    margin={5}
+                                    color={"#2dab66"}
+                                    loading={this.state.showLoadingCircle}
+                                />
+                                {
+                                    this.state.showEmptyMessage &&
+                                    <div className="form__accordion">
+                                        <h4>There are no products to show in this category</h4>
+                                    </div>
+                                }
                                 {         
-                                    this.state.showProductsFromCountry &&     
-                                        this.state.vouchersFromCountry.map((voucher) => {
-                                            return (
-                                                <div className="col-md-4 abs-center" key={voucher.product_id}>
-                                                    <div className="main__card" onClick={e => this.handleProductSelect(voucher)}>
-                                                        <div className="main__card__img">
-                                                            <img src={voucher.image} alt={voucher.name} />
+                                    !this.state.showEmptyMessage && 
+                                        this.state.showProductsFromCountry &&     
+                                            this.state.vouchersFromCountry.map((voucher) => {
+                                                return (
+                                                    <div className="col-md-4 abs-center" key={voucher.product_id}>
+                                                        <div className="main__card" onClick={e => this.handleProductSelect(voucher)}>
+                                                            <div className="main__card__img">
+                                                                <img src={voucher.image} alt={voucher.name} />
+                                                            </div>
+                                                            <p>{voucher.provider_name}</p>
                                                         </div>
-                                                        <p>{voucher.provider_name}</p>
                                                     </div>
-                                                </div>
-                                            );
-                                        })
+                                                );
+                                            })
                                 }
                                 { 
                                     !this.state.showProductsFromCountry &&
@@ -256,11 +331,9 @@ class Main extends Component {
                     </div>
                 </section>
                 <section className="footer">
-
                 </section>
             </div>
         );
     }
 }
-
 export default Main;
