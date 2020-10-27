@@ -38,10 +38,11 @@
 }
  */
 
- @font-face {
+@font-face {
   font-family: 'Font Awesome Solid';
   src: url('./assets/fonts/FAS.otf');
 }
+
 @font-face {
   font-family: 'Font Awesome';
   src: url('./assets/fonts/FAR.otf');
@@ -52,13 +53,13 @@
   font-size: 1rem;
   margin: 0.5rem 1rem;
 }
+
 .fas-icon {
   font-family: 'Font Awesome Solid';
-  font-size: 1.5rem;
   margin-right: 1rem;
 }
 
-.abs-center{
+.abs-center {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -99,13 +100,26 @@ ul {
   margin: 0.5rem 1rem;
 }
 
+.form-group label {
+  font-size: 1.75rem;
+}
+
+.form__accordion {
+  display: flex !important;
+  background-color: #f5f5f5 !important;
+  width: 100%;
+  color: black !important;
+  text-decoration: none !important;
+  justify-content: space-around;
+}
+
 .divider {
   width: 100%;
   height: 1px;
   background-color: #e5e5e5;
 }
 
-.breadcrumb-item a{
+.breadcrumb-item a {
   color: green
 }
 
@@ -114,26 +128,34 @@ ul {
 }
 
 .main__card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
   background-color: white;
   border-radius: 10px;
   margin: 1em 0;
   padding: 1em;
+  width: 100%;
+  min-width: 233px;
+  min-height: 184px;
 }
 
-.main__card img{
-  border-radius: 10px;
-  width: 100%;
+.main__card__img {
   height: auto;
 }
 
+.main__card__img img {
+  border-radius: 10px;
+  max-width: 100%;
+}
+
 .main__card p {
-  text-align: center;
   margin-top: 8px;
   margin-bottom: 0;
 }
+
 .footer {
-  position: absolute;
-  bottom: 0;
   width: 100%;
   padding: 1em;
   background-color: gray;

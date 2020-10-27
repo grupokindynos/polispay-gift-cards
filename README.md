@@ -9,5 +9,5 @@ PolisPay website that shows the available gift cards of every available country.
 ## Run Instructions
 ```javascript
 yarn install
-yarn run
+yarn start
 ```
