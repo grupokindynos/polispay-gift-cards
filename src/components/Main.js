@@ -8,7 +8,7 @@ import Header from './Header';
 import { css } from "@emotion/core";
 import PulseLoader from "react-spinners/PulseLoader";
 
-const override = css`display: block;margin: 0 auto;border-color: green;`;
+const override = css`display: block;margin: 0 auto;border-color: #2dab66;`;
 const benefits = [
     {
         id: 0,
@@ -60,16 +60,16 @@ class Main extends Component {
         super(props);
         this.state = {
             countries: [],
-            selectedCountry: "MX",
             vouchersFromCountry: [],
             productsFromVoucher: [],
-            vouchersFromBenefit: [],
-            showProductsFromCountry: true,
+            selectedCountry: "MX",
+            selectedProduct: "",
             selectedVoucher: {},
-            showBenefits: false,
             selectedBenefit: "",
+            showBenefits: false,
             showLoadingCircle: false,
             showEmptyMessage: false,
+            showProductsFromVoucher: true,
         };
     }
     componentDidMount() {
@@ -103,43 +103,29 @@ class Main extends Component {
         const response =
             await axios.get("https://hestia.polispay.com/open/voucher/list/products/" + countryCode);
         let vouchers = response.data;
-        let vouchersAux = Object.values(this.groupBy(vouchers, 'provider_id'));
         let voucherList = [];
-        vouchersAux.map((voucher) => (
-            voucherList.push(voucher[0])
-        ))
-        voucherList.sort((a, b) => a.provider_name.toLowerCase() < b.provider_name.toLowerCase() ? -1 : 1)
+        
+        if (this.state.selectedBenefit === "Allgiftcards" || this.state.selectedBenefit === "") {
+            let vouchersAux = Object.values(this.groupBy(vouchers, 'provider_id'));
+            vouchersAux.map((voucher) => (
+                voucherList.push(voucher[0])
+            ))
+            this.setState( {selectedBenefit: ""} )
+        } else {
+            voucherList = Object.values(vouchers).filter((voucher) => voucher.benefits[this.state.selectedBenefit] === true);
+        }
+
+        if (voucherList.length === 0) {
+            this.setState( {showEmptyMessage: true} )
+        } else {
+            voucherList.sort((a, b) => a.provider_name.toLowerCase() < b.provider_name.toLowerCase() ? -1 : 1)
+        }
         this.setState({
             vouchersFromCountry: voucherList,
-            showLoadingCircle: false,
             selectedProduct: "",
             selectedCountry: countryCode,
-            showBenefits: false,
-            selectedBenefit: "",
-        });
-    }
-    async getVouchersFromBenefit(benefit) {
-        this.setState({
-            showLoadingCircle: true,
-            showEmptyMessage: false,
-            vouchersFromCountry: [],
-        })
-        const response =
-            await axios.get("https://hestia.polispay.com/open/voucher/list/products/" + this.state.selectedCountry);
-        let vouchers = response.data;
-        let benefitList = [];
-        benefitList = Object.values(vouchers).filter((voucher) => voucher.benefits[benefit] === true);
-        if (benefitList.length === 0) {
-            this.setState({
-                showEmptyMessage: true,
-            })
-        }
-        benefitList.sort((a, b) => a.provider_name.toLowerCase() < b.provider_name.toLowerCase() ? -1 : 1)
-        this.setState({
-            vouchersFromCountry: benefitList,
-            showLoadingCircle: false,
             showBenefits: true,
-            selectedBenefit: benefit,
+            showLoadingCircle: false,
         });
     }
     async getProductsFromVoucher(voucher) {
@@ -154,9 +140,9 @@ class Main extends Component {
         ))
         this.setState({
             productsFromVoucher: productList,
-            showLoadingCircle: false,
-            showProductsFromCountry: false,
             selectedVoucher: voucher,
+            showLoadingCircle: false,
+            showProductsFromVoucher: false,
             showBenefits: true,
         });
     }
@@ -164,8 +150,9 @@ class Main extends Component {
         this.setState({
             selectedCountry: event.target.value,
             selectedProduct: "",
-            showProductsFromCountry: true,
+            selectedBenefit: "",
             showBenefits: false,
+            showProductsFromVoucher: true,
         });
         this.getVouchersFromCountry(event.target.value);
     }
@@ -173,8 +160,9 @@ class Main extends Component {
         this.setState({
             selectedCountry: country,
             selectedProduct: "",
-            showProductsFromCountry: true,
+            selectedBenefit: "",
             showBenefits: false,
+            showProductsFromVoucher: true,
         });
         this.getVouchersFromCountry(country);
     }
@@ -187,16 +175,12 @@ class Main extends Component {
     }
     handleBenefitSelected = (benefit) => {
         this.setState({
-            selectedBenefit: "",
+            selectedBenefit: benefit,
             selectedProduct: "",
             showBenefits: true,
-            showProductsFromCountry: true
+            showProductsFromVoucher: true
         })
-        if (benefit === "Allgiftcards") {
-            this.getVouchersFromCountry(this.state.selectedCountry);
-        } else {
-            this.getVouchersFromBenefit(benefit);
-        }
+        this.getVouchersFromCountry(this.state.selectedCountry);
     }
     render() {
         return (
@@ -212,7 +196,7 @@ class Main extends Component {
                                         <select className="form-control" onChange={this.handleCountrySelect} value={this.state.selectedCountry}>
                                             {
                                                 this.state.countries
-                                                    .sort( (a, b)  => countries.getName(a, "en") < countries.getName(b, "en") ? -1 : 1)
+                                                    .sort((a, b)   => countries.getName(a, "en") < countries.getName(b, "en") ? -1 : 1)
                                                     .map((country) => {
                                                     return (
                                                         <option key={country} value={country}>{countries.getName(country, "en")}</option>
@@ -257,18 +241,19 @@ class Main extends Component {
                                     <Breadcrumb.Item href="#" onClick={e => this.handleBreadcrumbCountrySelect(this.state.selectedCountry)}>
                                         {this.state.selectedCountry}
                                     </Breadcrumb.Item>
-                                    { 
-                                        this.state.selectedProduct &&
-                                            !this.state.showProductsFromCountry && 
-                                                <Breadcrumb.Item active href="#">
-                                                    {this.state.selectedProduct.provider_name}
-                                                </Breadcrumb.Item>
+                                    {
+                                        this.state.selectedBenefit &&
+                                            this.state.showProductsFromVoucher && 
+                                                this.state.selectedBenefit !== "Allgiftcards" &&
+                                                    <Breadcrumb.Item href="#">
+                                                        {this.state.selectedBenefit}
+                                                    </Breadcrumb.Item>
                                     }
                                     { 
-                                        this.state.showBenefits &&
-                                            this.state.showProductsFromCountry && 
-                                                <Breadcrumb.Item href="#" onClick={e => this.handleBenefitSelected(this.state.selectedBenefit)}>
-                                                    {this.state.selectedBenefit}
+                                        this.state.selectedProduct &&
+                                            !this.state.showProductsFromVoucher && 
+                                                <Breadcrumb.Item active href="#">
+                                                    {this.state.selectedProduct.provider_name}
                                                 </Breadcrumb.Item>
                                     }
                                 </Breadcrumb>
@@ -276,8 +261,8 @@ class Main extends Component {
                             <div className="row">
                                 <PulseLoader
                                     css={override}
-                                    size={15}
-                                    margin={5}
+                                    size={12}
+                                    margin={6}
                                     color={"#2dab66"}
                                     loading={this.state.showLoadingCircle}
                                 />
@@ -289,7 +274,7 @@ class Main extends Component {
                                 }
                                 {         
                                     !this.state.showEmptyMessage && 
-                                        this.state.showProductsFromCountry &&     
+                                        this.state.showProductsFromVoucher &&     
                                             this.state.vouchersFromCountry.map((voucher) => {
                                                 return (
                                                     <div className="col-md-4 abs-center" key={voucher.product_id}>
@@ -304,7 +289,7 @@ class Main extends Component {
                                             })
                                 }
                                 { 
-                                    !this.state.showProductsFromCountry &&
+                                    !this.state.showProductsFromVoucher &&
                                         this.state.productsFromVoucher.map((product) => {
                                             let currencyValue = product.currency==="" ? 'EUR' : product.currency;
                                             const formatter = new Intl.NumberFormat('en-US', {
